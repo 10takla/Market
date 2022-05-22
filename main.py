@@ -26,14 +26,21 @@ def get_columns_name(table):
 
 def action(action, table, entries):
     if action == 'Добавить':
-        print(table, [i.get() for i in entries])
-        text = "'" + "', '".join(get_columns_name(table)) + "'"
-        print("INSERT INTO "+table+" ("+ text +") VALUES ();")
+        text = get_columns_name(table)
+        n = len(entries)
+        for i in range(n):
+            if entries[i] == '':
+                del entries[i]
+                del text[i]
+        print(text, entries)
+
     elif action == "Изменить":
         pass
     elif action == "Удалить":
         print(action)
 
+
+action('Добавить', 'клиент', ['', 'asd', '', ''])
 
 window = Tk()
 
@@ -100,7 +107,7 @@ def worker(login, right):
         for i in arr:
             if right == 'Персонал' and table != 'продажа':
                 continue
-            Button(frame_edit, text=i, font=(1, 12), command=lambda i=i: action(i, table, var)).pack(side=LEFT,
+            Button(frame_edit, text=i, font=(1, 12), command=lambda i=i: action(i, table, [i.get() for i in var])).pack(side=LEFT,
                                                                                                      anchor=S, padx=20,
                                                                                                      pady=10)
         frame_edit.pack(pady=5, fill='x')
@@ -146,6 +153,6 @@ def into():
                                                                                                             pady=15)
 
 
-into()
+#into()
 
 window.mainloop()
