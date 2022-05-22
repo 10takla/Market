@@ -8,33 +8,84 @@ mydb = mysql.connector.connect(
     password='AL38926516al',
     database='магазин'
 )
-cursor = mydb.cursor()
+mycursor = mydb.cursor()
 
-def destroy():
-    children = window.winfo_children()
+
+def destroy(frame):
+    children = frame.winfo_children()
     for i in children:
         i.destroy()
 
 
+def get_columns_name(table):
+    mycursor.execute(
+        "SELECT `COLUMN_NAME` FROM `INFORMATION_SCHEMA`.`COLUMNS` WHERE `TABLE_SCHEMA`='магазин'  AND `TABLE_NAME`='" + table + "';")
+    return [i for j in mycursor.fetchall() for i in j]
+
 window = Tk()
 
-def admin(login):
-    destroy()
-    window.title('Администратор '+login)
-    window.geometry('600x350')
 
-    cursor.execute("SHOW TABLES FROM магазин;")
-    db = cursor.fetchone()
-    print(db)
+def admin(login):
+    destroy(window)
+    window.title('Администратор ' + login)
+    window.geometry('870x750')
+
+    mycursor.execute("SHOW TABLES FROM магазин;")
+    db = [i for j in mycursor.fetchall() for i in j]
+
     frame_panel = LabelFrame(window, text='Выберите таблицу', font=30, labelanchor='n')
     frame_panel.pack(pady=5, fill='x')
+    for i in db:
+        Button(frame_panel, text=i.title(), font=8, command=lambda i=i: (draw_table(i), draw_panel(i))).pack(side=LEFT, padx=15, pady=10)
+    Button(frame_panel, text="Назад".title(), font=8, command=lambda: into()).pack(side=RIGHT, fill=Y)
 
-    for i in range(8):
-        Button(frame_panel, text=i, font=8).pack(side=LEFT, padx=15, pady=10)
+    frame_table = Frame(window)
+    frame_table.pack(anchor=W)
+    def draw_table(table):
+        destroy(frame_table)
+
+        heads = get_columns_name(table)
+        mycursor.execute("SELECT * FROM "+table+";")
+        lst = mycursor.fetchall()
+        table = ttk.Treeview(frame_table, show='headings')
+        table['columns'] = heads
+
+        for i in heads:
+            table.heading(i, text=i.title().replace('_', ' '), anchor='center')
+            table.column(i, anchor='center', width=100)
+        for i in lst:
+            table.insert('', END, values=i)
+
+        scroll_pane = ttk.Scrollbar(frame_table, command=table.yview)
+        table.configure(yscrollcommand=scroll_pane.set)
+        scroll_pane.pack(side=RIGHT, fill=Y)
+
+        table.pack()
+    draw_table(db[0])
+
+    frame_edit = LabelFrame(window, text='Изменить', font=30)
+    def draw_panel(table):
+        destroy(frame_edit)
+        frame_1 = Frame(frame_edit)
+        frame_1.pack(anchor=W)
+
+        bd = get_columns_name(table)
+        for i in bd:
+            Label(frame_1, text=i.title().replace('_', ' '), width=20, anchor=E).grid(row=bd.index(i), column=0)
+            Entry(frame_1).grid(row=bd.index(i), column=1)
+
+        arr = ["Добавить", "Изменить", "Удалить"]
+        for i in arr:
+            Button(frame_edit, text=i, font=2).pack(side=LEFT, anchor=S, padx=20)
+        frame_edit.pack(pady=5, fill='x')
+    draw_panel(db[0])
 
 admin('adsda')
 
+
 def into():
+    destroy()
+
     def vhod(var, var2):
         if var[1].get() == '1':
             admin(var[0].get())
@@ -71,6 +122,6 @@ def into():
     Button(frame, text='Войти', font=12, width=8, command=lambda: vhod(var, var2)).pack(side=BOTTOM, pady=15)
 
 
-#into()
+# into()
 
 window.mainloop()
