@@ -73,7 +73,7 @@ def worker(login, right):
     for i in db:
         Button(frame_panel, text=i.title(), font=(1, 14), command=lambda i=i: (draw_table(i), draw_panel(i))).pack(
             side=LEFT, padx=15, pady=10)
-    Button(frame_panel, text="Назад".title(), font=8, command=lambda: into()).pack(side=RIGHT, fill=Y)
+    Button(frame_panel, text="Выход".title(), font=8, command=lambda: into()).pack(side=RIGHT, fill=Y)
 
     frame_table = Frame(window)
     frame_table.pack(anchor=W)
@@ -132,14 +132,41 @@ def worker(login, right):
     draw_panel(db[0])
 
 
+def client(login):
+    destroy(window)
+    window.title('Клиент ' + login)
+    window.minsize(200, 210)
+
+    frame_search = LabelFrame(window, text='Поиск', font=(1, 15))
+    frame_search.pack(side=TOP, anchor=N, padx=20, pady=15)
+    Entry(frame_search).pack(side=LEFT)
+    Button(frame_search, text='Поиск', font=(1, 11)).pack(padx=10, side=LEFT)
+    Button(frame_search, text='Выход', font=(1, 11), command=lambda: into()).pack()
+
+
+    frame_filter = LabelFrame(window, text='Фильтры', font=(1, 15), labelanchor=N)
+    frame_filter.pack(anchor=W,padx=20, )
+
+    Checkbutton(frame_filter, text="В наличии").pack(anchor=W)
+    Checkbutton(frame_filter, text="Отсутсвует в наличии").pack(anchor=W)
+
+    frame_price = LabelFrame(frame_filter, text='Цена')
+    frame_price.pack()
+
+
+client('')
+
+
 def into():
     destroy(window)
 
-    def vhod(var, var2, arr_2):
-        if var[1].get() == '1' and var2 == arr_2[0]:
+    def vhod(var, var2):
+        if var[1].get() == '1' and var2 == 'Администратор':
             worker(var[0].get(), var2)
-        elif var[1].get() == '2' and var2 == arr_2[1]:
+        elif var[1].get() == '2' and var2 == 'Персонал':
             worker(var[0].get(), var2)
+        elif var2 == 'Клиент':
+            client(var[0].get())
         else:
             mb.showerror("Ошибка", "Неправильный логин или пароль!")
 
@@ -166,10 +193,10 @@ def into():
                 Radiobutton(frame_into, text=j, font=3, variable=var2, value=arr_2.index(j)).grid(
                     column=arr_2.index(j) + 1, row=2)
 
-    Button(frame, text='Войти', font=12, width=8, command=lambda: vhod(var, arr_2[var2.get()], arr_2)).pack(side=BOTTOM,
-                                                                                                            pady=15)
+    Button(frame, text='Войти', font=12, width=8, command=lambda: vhod(var, arr_2[var2.get()])).pack(side=BOTTOM,
+                                                                                                     pady=15)
 
 
-into()
+# into()
 
 window.mainloop()
