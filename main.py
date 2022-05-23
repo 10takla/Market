@@ -25,22 +25,37 @@ def get_columns_name(table):
 
 
 def action(action, table, entries):
+    text = get_columns_name(table)
+    text_1 = []
+    text_2 = []
+    for i in range(len(entries)):
+        if entries[i] != '':
+            text_1.append(text[i])
+            text_2.append(entries[i])
+
     if action == 'Добавить':
-        text = get_columns_name(table)
-        n = len(entries)
-        for i in range(n):
-            if entries[i] == '':
-                del entries[i]
-                del text[i]
-        print(text, entries)
+        text_1 = ", ".join([i for i in text_1])
+        text_2 = ", ".join([f"'{i}'" for i in text_2])
+        mycursor.execute("INSERT INTO " + table + " (" + text_1 + ") VALUES (" + text_2 + ");")
 
     elif action == "Изменить":
-        pass
+        text_1.pop(0)
+        text_2.pop(0)
+        text_2 = [f"'{i}'" for i in text_2]
+        text_3 = []
+        for i in range(len(text_1)):
+            text_3 += [text_1[i] + " = " + text_2[i]]
+        text_3 = ", ".join(text_3)
+        mycursor.execute(
+            "UPDATE " + table + " SET " + text_3 + " WHERE (" + text[0] + " = '" + entries[0] + "');")
+        if entries[0] == '':
+            mb.showerror("Ошибка", "Введите id строки!")
+
     elif action == "Удалить":
-        print(action)
+        mycursor.execute("DELETE FROM " + table + " WHERE " + text[0] + " = " + entries[0] + ";")
+        if entries[0] == '':
+            mb.showerror("Ошибка", "Введите id строки!")
 
-
-action('Добавить', 'клиент', ['', 'asd', '', ''])
 
 window = Tk()
 
@@ -107,9 +122,11 @@ def worker(login, right):
         for i in arr:
             if right == 'Персонал' and table != 'продажа':
                 continue
-            Button(frame_edit, text=i, font=(1, 12), command=lambda i=i: action(i, table, [i.get() for i in var])).pack(side=LEFT,
-                                                                                                     anchor=S, padx=20,
-                                                                                                     pady=10)
+            Button(frame_edit, text=i, font=(1, 12),
+                   command=lambda i=i: (action(i, table, [i.get() for i in var]), draw_table(table))).pack(
+                side=LEFT,
+                anchor=S, padx=20,
+                pady=10)
         frame_edit.pack(pady=5, fill='x')
 
     draw_panel(db[0])
@@ -153,6 +170,6 @@ def into():
                                                                                                             pady=15)
 
 
-#into()
+into()
 
 window.mainloop()
