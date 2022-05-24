@@ -135,14 +135,17 @@ def worker(login, right):
 
 def client(login):
     def power(var_1, var_2, var_3):
-        print(var_3)
-        for i in range(len(var_2)):
-            print(var_2[i])
         if var_1[0].get() == 1 and var_1[1].get() == 0:
             return (" WHERE в_наличии = '0'")
         elif var_1[0].get() == 0 and var_1[1].get() == 1:
             return (" WHERE в_наличии != '0'")
         else: return ''
+    def price(var_2):
+        if var_2[0].get() < var_2[1].get():
+            return " WHERE цена BETWEEN " + str(var_2[0].get()) + " and " + str(var_2[1].get())
+        else:
+            return ''
+
     destroy(window)
     window.title('Клиент ' + login)
     window.minsize(200, 210)
@@ -150,7 +153,7 @@ def client(login):
     frame_search = LabelFrame(window, text='Поиск', font=(1, 15))
     frame_search.pack(side=TOP, anchor=W, padx=20, pady=15)
     Entry(frame_search).pack(side=LEFT)
-    Button(frame_search, text='Поиск', font=(1, 11), command=lambda: draw_table(frame_table, 'товар', "SELECT * FROM товар "+power(var, var_2, var_3)+";") ).pack(padx=10, side=LEFT)
+    Button(frame_search, text='Поиск', font=(1, 11), command=lambda: draw_table(frame_table, 'товар', "SELECT * FROM товар "+power(var, var_2, var_3)+price(var_2)+";") ).pack(padx=10, side=LEFT)
     Button(frame_search, text='Выйти', font=(1, 11), command=lambda: into()).pack()
 
 
@@ -169,9 +172,8 @@ def client(login):
     var_2 = []
     for i in array:
         Label(frame_price, text=i).pack(side=LEFT)
-        t=Spinbox(frame_price, from_=0, to=100000, increment=1000, width=7)
-        t.pack(side=LEFT)
-        var_2 += [t.get()]
+        var_2 += [IntVar()]
+        Spinbox(frame_price, from_=0, to=100000, increment=1000, width=7, textvariable=var_2[array.index(i)]).pack(side=LEFT)
 
     arr = ['Категория', 'Производитель']
     arr_2 = ['категория', 'фирма']
@@ -181,11 +183,13 @@ def client(login):
         frame_1 = LabelFrame(frame_filter, text=i, font=(1, 13))
         frame_1.pack(anchor=W)
         mycursor.execute("SELECT " + arr_2[arr.index(i)] + " FROM " + arr_3[arr.index(i)] + ";")
-        l = set(mycursor.fetchall())
-        var_3 += [('')]
+        l = list(set(i for j in mycursor.fetchall() for i in j))
+        tmp = []
         for i in l:
-            var_3 += [(1)]
-            Checkbutton(frame_1, text=i, variable=var).pack(anchor=W)
+            tmp += [IntVar()]
+            Checkbutton(frame_1, text=i, variable=tmp[l.index(i)]).pack(anchor=W)
+        var_3 += [tmp]
+        print(var_3)
 
     arr_4 = ['Сортировка', 'Группировка']
     arr_5 = [('Отсутсвует', 'Сначала дорогие', 'Сначала дешевые'),
