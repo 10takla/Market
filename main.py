@@ -134,17 +134,34 @@ def worker(login, right):
 
 
 def client(login):
-    def power(var_1, var_2, var_3):
+    def power(var_1, var_2, var_3, l):
+        text = []
         if var_1[0].get() == 1 and var_1[1].get() == 0:
-            return (" WHERE в_наличии = '0'")
+            text += ["в_наличии != '0'"]
         elif var_1[0].get() == 0 and var_1[1].get() == 1:
-            return (" WHERE в_наличии != '0'")
-        else: return ''
-    def price(var_2):
+            text += ["в_наличии = '0'"]
+
         if var_2[0].get() < var_2[1].get():
-            return " WHERE цена BETWEEN " + str(var_2[0].get()) + " and " + str(var_2[1].get())
-        else:
+            text += ["цена BETWEEN " + str(var_2[0].get()) + " and " + str(var_2[1].get())]
+
+        o = []
+        for i in var_3:
+            p = []
+            for j in i:
+                p += [f"'{j.get()}'"]
+            o += [p]
+        var_3 = o
+
+        for i in range(1):
+            l = ", ".join(var_3[i])
+            text += ["категория IN(" + l + ")"]
+
+        print(text)
+        if len(text) == 0:
             return ''
+        else:
+            print('WHERE ' + ' and '.join(text))
+            return ('WHERE ' + ' and '.join(text))
 
     destroy(window)
     window.title('Клиент ' + login)
@@ -153,9 +170,13 @@ def client(login):
     frame_search = LabelFrame(window, text='Поиск', font=(1, 15))
     frame_search.pack(side=TOP, anchor=W, padx=20, pady=15)
     Entry(frame_search).pack(side=LEFT)
-    Button(frame_search, text='Поиск', font=(1, 11), command=lambda: draw_table(frame_table, 'товар', "SELECT * FROM товар "+power(var, var_2, var_3)+price(var_2)+";") ).pack(padx=10, side=LEFT)
+    Button(frame_search, text='Поиск', font=(1, 11), command=lambda: draw_table(frame_table, 'товар',
+                                                                                "SELECT * FROM товар " + power(var,
+                                                                                                               var_2,
+                                                                                                               var_3,
+                                                                                                               l) + ";")).pack(
+        padx=10, side=LEFT)
     Button(frame_search, text='Выйти', font=(1, 11), command=lambda: into()).pack()
-
 
     frame_filter = LabelFrame(window, text='Фильтры', font=(1, 15), labelanchor=N)
     frame_filter.pack(anchor=W, padx=20, side=LEFT)
@@ -173,7 +194,8 @@ def client(login):
     for i in array:
         Label(frame_price, text=i).pack(side=LEFT)
         var_2 += [IntVar()]
-        Spinbox(frame_price, from_=0, to=100000, increment=1000, width=7, textvariable=var_2[array.index(i)]).pack(side=LEFT)
+        Spinbox(frame_price, from_=0, to=100000, increment=1000, width=7, textvariable=var_2[array.index(i)]).pack(
+            side=LEFT)
 
     arr = ['Категория', 'Производитель']
     arr_2 = ['категория', 'фирма']
@@ -186,10 +208,9 @@ def client(login):
         l = list(set(i for j in mycursor.fetchall() for i in j))
         tmp = []
         for i in l:
-            tmp += [IntVar()]
-            Checkbutton(frame_1, text=i, variable=tmp[l.index(i)]).pack(anchor=W)
+            tmp += [StringVar()]
+            Checkbutton(frame_1, text=i, variable=tmp[l.index(i)], onvalue=i, offvalue='').pack(anchor=W)
         var_3 += [tmp]
-        print(var_3)
 
     arr_4 = ['Сортировка', 'Группировка']
     arr_5 = [('Отсутсвует', 'Сначала дорогие', 'Сначала дешевые'),
@@ -201,7 +222,7 @@ def client(login):
 
     frame_table = Frame(window)
     frame_table.pack(anchor=W)
-    draw_table(frame_table, 'товар', "SELECT * FROM " + 'товар'+";")
+    draw_table(frame_table, 'товар', "SELECT * FROM " + 'товар' + ";")
 
 
 client('')
