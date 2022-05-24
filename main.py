@@ -146,46 +146,40 @@ def client(login):
     Button(frame_search, text='Поиск', font=(1, 11), command=lambda: power(var)).pack(padx=10, side=LEFT)
     Button(frame_search, text='Выйти', font=(1, 11), command=lambda: into()).pack()
 
-    frame_filter = LabelFrame(window, text='Фильтры', font=(1, 15), labelanchor=N)
-    frame_filter.pack(anchor=W, padx=20, )
+    def filters():
+        frame_filter = LabelFrame(window, text='Фильтры', font=(1, 15), labelanchor=N)
+        frame_filter.pack(anchor=W, padx=20, )
 
-    Checkbutton(frame_filter, text="В наличии").pack(anchor=W)
-    Checkbutton(frame_filter, text="Отсутсвует в наличии").pack(anchor=W)
+        Checkbutton(frame_filter, text="В наличии").pack(anchor=W)
+        Checkbutton(frame_filter, text="Отсутсвует в наличии").pack(anchor=W)
 
-    frame_price = LabelFrame(frame_filter, text='Цена', font=(1, 13))
-    frame_price.pack()
+        frame_price = LabelFrame(frame_filter, text='Цена', font=(1, 13))
+        frame_price.pack()
+        array = ['От', 'До']
+        for i in array:
+            Label(frame_price, text=i).pack(side=LEFT)
+            Spinbox(frame_price, from_=0, to=100000, increment=1000, width=7).pack(side=LEFT)
 
-    array = ['От', 'До']
-    for i in array:
-        Label(frame_price, text=i).pack(side=LEFT)
-        Spinbox(frame_price, from_=0, to=100000, increment=1000, width=7).pack(side=LEFT)
+        arr = ['Категория', 'Производитель']
+        arr_2 = ['категория', 'фирма']
+        arr_3 = ['товар', 'производитель']
+        var = []
+        for i in arr:
+            frame_1 = LabelFrame(frame_filter, text=i, font=(1, 13))
+            frame_1.pack(anchor=W)
+            mycursor.execute("SELECT " + arr_2[arr.index(i)] + " FROM " + arr_3[arr.index(i)] + ";")
+            var += [IntVar()]
+            for i in set(mycursor.fetchall()):
+                Checkbutton(frame_1, text=i, variable=var).pack(anchor=W)
 
-    arr = ['Категория', 'Производитель']
-    arr_2 = ['категория', 'фирма']
-    arr_3 = ['товар', 'производитель']
-    var = []
-    for i in arr:
-        frame_1 = LabelFrame(frame_filter, text=i, font=(1, 13))
-        frame_1.pack(anchor=W)
-        mycursor.execute("SELECT " + arr_2[arr.index(i)] + " FROM " + arr_3[arr.index(i)] + ";")
-        var += [IntVar()]
-        for i in set(mycursor.fetchall()):
-            Checkbutton(frame_1, text=i, variable=var).pack(anchor=W)
+        arr_4 = ['Сортировка', 'Группировка']
+        arr_5 = [('Отсутсвует', 'Сначала дорогие', 'Сначала дешевые'), ('Отсутсвует', 'По производителю', 'По категории')]
+        for i in arr_4:
+            frame_2 = LabelFrame(frame_filter, text=i, font=(1, 13))
+            frame_2.pack(anchor=W)
+            ttk.Combobox(frame_2, values=arr_5[arr_4.index(i)]).pack()
+    filters()
 
-    arr_4 = ['Сортировка', 'Группировка']
-    arr_5 = ['Сначала дорогие', 'Сначала дешевые']
-    for i in arr_4:
-        frame_2 = LabelFrame(frame_filter, text=i, font=(1, 13))
-        frame_2.pack(anchor=W)
-
-        ttk.Combobox(frame_2).pack()
-
-
-    frame_sort = LabelFrame(frame_filter, text='Сортировка', font=(1, 13))
-    frame_sort.pack()
-    sort = ['Сначала дорогие', 'По возростанию']
-    for i in sort:
-        pass
 
 
 client('')
