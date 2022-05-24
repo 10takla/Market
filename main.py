@@ -57,6 +57,28 @@ def action(action, table, entries):
             mb.showerror("Ошибка", "Введите id строки!")
 
 
+def draw_table(frame_table, table, text):
+    destroy(frame_table)
+
+    heads = get_columns_name(table)
+    mycursor.execute(text)
+    lst = mycursor.fetchall()
+    table = ttk.Treeview(frame_table, show='headings')
+    table['columns'] = heads
+
+    for i in heads:
+        table.heading(i, text=i.title().replace('_', ' '), anchor='center')
+        table.column(i, anchor='center', width=150)
+    for i in lst:
+        table.insert('', END, values=i)
+
+    scroll_pane = ttk.Scrollbar(frame_table, command=table.yview)
+    table.configure(yscrollcommand=scroll_pane.set)
+    scroll_pane.pack(side=RIGHT, fill=Y)
+
+    table.pack()
+
+
 window = Tk()
 
 
@@ -71,35 +93,14 @@ def worker(login, right):
     frame_panel = LabelFrame(window, text='Выберите таблицу', font=30, labelanchor='n')
     frame_panel.pack(pady=5, fill='x')
     for i in db:
-        Button(frame_panel, text=i.title(), font=(1, 14), command=lambda i=i: (draw_table(i), draw_panel(i))).pack(
+        Button(frame_panel, text=i.title(), font=(1, 14),
+               command=lambda i=i: (draw_table(frame_table, i, "SELECT * FROM " + i + ";"), draw_panel(i))).pack(
             side=LEFT, padx=15, pady=10)
     Button(frame_panel, text="Выйти".title(), font=8, command=lambda: into()).pack(side=RIGHT, fill=Y)
 
     frame_table = Frame(window)
     frame_table.pack(anchor=W)
-
-    def draw_table(table):
-        destroy(frame_table)
-
-        heads = get_columns_name(table)
-        mycursor.execute("SELECT * FROM " + table + ";")
-        lst = mycursor.fetchall()
-        table = ttk.Treeview(frame_table, show='headings')
-        table['columns'] = heads
-
-        for i in heads:
-            table.heading(i, text=i.title().replace('_', ' '), anchor='center')
-            table.column(i, anchor='center', width=150)
-        for i in lst:
-            table.insert('', END, values=i)
-
-        scroll_pane = ttk.Scrollbar(frame_table, command=table.yview)
-        table.configure(yscrollcommand=scroll_pane.set)
-        scroll_pane.pack(side=RIGHT, fill=Y)
-
-        table.pack()
-
-    draw_table(db[0])
+    draw_table(frame_table, db[0], "SELECT * FROM " + db[0] + ";")
 
     frame_edit = LabelFrame(window, text='Изменить', font=30)
 
@@ -133,53 +134,70 @@ def worker(login, right):
 
 
 def client(login):
-    def power(var):
-        print(var.get())
-
+    def power(var_1, var_2, var_3):
+        print(var_3)
+        for i in range(len(var_2)):
+            print(var_2[i])
+        if var_1[0].get() == 1 and var_1[1].get() == 0:
+            return (" WHERE в_наличии = '0'")
+        elif var_1[0].get() == 0 and var_1[1].get() == 1:
+            return (" WHERE в_наличии != '0'")
+        else: return ''
     destroy(window)
     window.title('Клиент ' + login)
     window.minsize(200, 210)
 
     frame_search = LabelFrame(window, text='Поиск', font=(1, 15))
-    frame_search.pack(side=TOP, anchor=N, padx=20, pady=15)
+    frame_search.pack(side=TOP, anchor=W, padx=20, pady=15)
     Entry(frame_search).pack(side=LEFT)
-    Button(frame_search, text='Поиск', font=(1, 11), command=lambda: power(var)).pack(padx=10, side=LEFT)
+    Button(frame_search, text='Поиск', font=(1, 11), command=lambda: draw_table(frame_table, 'товар', "SELECT * FROM товар "+power(var, var_2, var_3)+";") ).pack(padx=10, side=LEFT)
     Button(frame_search, text='Выйти', font=(1, 11), command=lambda: into()).pack()
 
-    def filters():
-        frame_filter = LabelFrame(window, text='Фильтры', font=(1, 15), labelanchor=N)
-        frame_filter.pack(anchor=W, padx=20, )
 
-        Checkbutton(frame_filter, text="В наличии").pack(anchor=W)
-        Checkbutton(frame_filter, text="Отсутсвует в наличии").pack(anchor=W)
+    frame_filter = LabelFrame(window, text='Фильтры', font=(1, 15), labelanchor=N)
+    frame_filter.pack(anchor=W, padx=20, side=LEFT)
 
-        frame_price = LabelFrame(frame_filter, text='Цена', font=(1, 13))
-        frame_price.pack()
-        array = ['От', 'До']
-        for i in array:
-            Label(frame_price, text=i).pack(side=LEFT)
-            Spinbox(frame_price, from_=0, to=100000, increment=1000, width=7).pack(side=LEFT)
+    arr = ["В наличии", "Отсутсвует в наличии"]
+    var = []
+    for i in arr:
+        var += [IntVar()]
+        Checkbutton(frame_filter, text=i, variable=var[arr.index(i)]).pack(anchor=W)
 
-        arr = ['Категория', 'Производитель']
-        arr_2 = ['категория', 'фирма']
-        arr_3 = ['товар', 'производитель']
-        var = []
-        for i in arr:
-            frame_1 = LabelFrame(frame_filter, text=i, font=(1, 13))
-            frame_1.pack(anchor=W)
-            mycursor.execute("SELECT " + arr_2[arr.index(i)] + " FROM " + arr_3[arr.index(i)] + ";")
-            var += [IntVar()]
-            for i in set(mycursor.fetchall()):
-                Checkbutton(frame_1, text=i, variable=var).pack(anchor=W)
+    frame_price = LabelFrame(frame_filter, text='Цена', font=(1, 13))
+    frame_price.pack()
+    array = ['От', 'До']
+    var_2 = []
+    for i in array:
+        Label(frame_price, text=i).pack(side=LEFT)
+        t=Spinbox(frame_price, from_=0, to=100000, increment=1000, width=7)
+        t.pack(side=LEFT)
+        var_2 += [t.get()]
 
-        arr_4 = ['Сортировка', 'Группировка']
-        arr_5 = [('Отсутсвует', 'Сначала дорогие', 'Сначала дешевые'), ('Отсутсвует', 'По производителю', 'По категории')]
-        for i in arr_4:
-            frame_2 = LabelFrame(frame_filter, text=i, font=(1, 13))
-            frame_2.pack(anchor=W)
-            ttk.Combobox(frame_2, values=arr_5[arr_4.index(i)]).pack()
-    filters()
+    arr = ['Категория', 'Производитель']
+    arr_2 = ['категория', 'фирма']
+    arr_3 = ['товар', 'производитель']
+    var_3 = []
+    for i in arr:
+        frame_1 = LabelFrame(frame_filter, text=i, font=(1, 13))
+        frame_1.pack(anchor=W)
+        mycursor.execute("SELECT " + arr_2[arr.index(i)] + " FROM " + arr_3[arr.index(i)] + ";")
+        l = set(mycursor.fetchall())
+        var_3 += [('')]
+        for i in l:
+            var_3 += [(1)]
+            Checkbutton(frame_1, text=i, variable=var).pack(anchor=W)
 
+    arr_4 = ['Сортировка', 'Группировка']
+    arr_5 = [('Отсутсвует', 'Сначала дорогие', 'Сначала дешевые'),
+             ('Отсутсвует', 'По id', 'По производителю', 'По категории')]
+    for i in arr_4:
+        frame_2 = LabelFrame(frame_filter, text=i, font=(1, 13))
+        frame_2.pack(anchor=W)
+        ttk.Combobox(frame_2, values=arr_5[arr_4.index(i)]).pack()
+
+    frame_table = Frame(window)
+    frame_table.pack(anchor=W)
+    draw_table(frame_table, 'товар', "SELECT * FROM " + 'товар'+";")
 
 
 client('')
