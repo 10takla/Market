@@ -64,12 +64,11 @@ def draw_table(frame_table, table, text, column_delete=''):
     heads = get_columns_name(table, column_delete)
     mycursor.execute(text)
     lst = mycursor.fetchall()
-    table = ttk.Treeview(frame_table, show='headings')
-    table['columns'] = heads
+    table = ttk.Treeview(frame_table, show='headings', columns=heads, height=20)
 
     for i in heads:
-        table.heading(i, text=i.title().replace('_', ' '), anchor='center')
-        table.column(i, anchor='center', width=150)
+        table.heading(i, text=i.title().replace('_', ' '))
+        table.column(i, anchor=W,  width=150)
     for i in lst:
         table.insert('', END, values=i)
 
@@ -78,7 +77,6 @@ def draw_table(frame_table, table, text, column_delete=''):
     scroll_pane.pack(side=RIGHT, fill=Y)
 
     table.pack()
-
 
 
 window = Tk()
@@ -137,7 +135,7 @@ def worker(login, right):
 
 def client(login):
     def where(search, var_1, var_2, var_3, arr):
-        text = ['назвакние_товара LIKE "_%'+search.get()+'_%"']
+        text = ['назвакние_товара LIKE "_%' + search.get() + '_%"']
 
         if var_1[0].get() == 1 and var_1[1].get() == 0:
             text += ["в_наличии != '0'"]
@@ -157,16 +155,18 @@ def client(login):
                 tmp1 += [tmp2]
             for i in arr:
                 if i == arr[0] and tmp1[0] != []:
-                        text += ["категория IN(" +", ".join(tmp1[0]) +")"]
+                    text += ["категория IN(" + ", ".join(tmp1[0]) + ")"]
                 if i == arr[1] and tmp1[1] != []:
-                        text += ["id_производителя IN (SELECT id_производителя FROM производитель WHERE фирма IN(" +", ".join(tmp1[1]) +"))"]
+                    text += [
+                        "id_производителя IN (SELECT id_производителя FROM производитель WHERE фирма IN(" + ", ".join(
+                            tmp1[1]) + "))"]
             return text
+
         add(text)
 
         if len(text) == 0:
             return ''
         else:
-            print(' WHERE ' + ' and '.join(text))
             return (' WHERE ' + ' and '.join(text))
 
     def order(var_4):
@@ -178,7 +178,7 @@ def client(login):
         if len(text) == 0:
             return ''
         else:
-            return (' ORDER BY '+' and '.join(text))
+            return (' ORDER BY ' + ' and '.join(text))
 
     def group(var_4):
         text = []
@@ -193,7 +193,6 @@ def client(login):
             return ''
         else:
             return (' GROUP BY ' + ' and '.join(text))
-
 
     destroy(window)
     window.title('Клиент ' + login)
@@ -210,7 +209,11 @@ def client(login):
     t.remove('id_поставки')
     t = ", ".join(t)
     Button(frame_search, text='Поиск', font=(1, 11), command=lambda: draw_table(frame_table, 'товар',
-                                                                                "SELECT "+t+" FROM товар " + where(search, var, var_2, var_3, arr) + group(var_4[1]) + order(var_4[0])+";", column_delete)).pack(
+                                                                                "SELECT " + t + " FROM товар " + where(
+                                                                                    search, var, var_2, var_3,
+                                                                                    arr) + group(var_4[1]) + order(
+                                                                                    var_4[0]) + ";",
+                                                                                column_delete)).pack(
         padx=10, side=LEFT)
     Button(frame_search, text='Выйти', font=(1, 11), command=lambda: into()).pack()
 
@@ -260,7 +263,7 @@ def client(login):
 
     frame_table = Frame(window)
     frame_table.pack(anchor=W)
-    draw_table(frame_table, 'товар', "SELECT "+t+" FROM " + 'товар' + ";", column_delete)
+    draw_table(frame_table, 'товар', "SELECT " + t + " FROM " + 'товар' + ";", column_delete)
 
 
 client('')
