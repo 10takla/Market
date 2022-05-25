@@ -18,9 +18,12 @@ def destroy(frame):
         i.destroy()
 
 
-def get_columns_name(table):
+def get_columns_name(table, column_delete=''):
+    print(column_delete)
+    if column_delete != None:
+        column_delete = " AND `COLUMN_NAME` != '" + column_delete + "'"
     mycursor.execute(
-        "SELECT `COLUMN_NAME` FROM `INFORMATION_SCHEMA`.`COLUMNS` WHERE `TABLE_SCHEMA`='магазин'  AND `TABLE_NAME`='" + table + "';")
+        "SELECT `COLUMN_NAME` FROM `INFORMATION_SCHEMA`.`COLUMNS` WHERE `TABLE_SCHEMA`='магазин' AND `TABLE_NAME`='" + table + "'" + column_delete + ";")
     return [i for j in mycursor.fetchall() for i in j]
 
 
@@ -57,10 +60,9 @@ def action(action, table, entries):
             mb.showerror("Ошибка", "Введите id строки!")
 
 
-def draw_table(frame_table, table, text):
+def draw_table(frame_table, table, text, column_delete=''):
     destroy(frame_table)
-
-    heads = get_columns_name(table)
+    heads = get_columns_name(table, column_delete)
     mycursor.execute(text)
     lst = mycursor.fetchall()
     table = ttk.Treeview(frame_table, show='headings')
@@ -77,6 +79,7 @@ def draw_table(frame_table, table, text):
     scroll_pane.pack(side=RIGHT, fill=Y)
 
     table.pack()
+
 
 
 window = Tk()
@@ -134,7 +137,7 @@ def worker(login, right):
 
 
 def client(login):
-    def power(var_1, var_2, var_3, l):
+    def where(var_1, var_2, var_3, arr):
         text = []
         if var_1[0].get() == 1 and var_1[1].get() == 0:
             text += ["в_наличии != '0'"]
@@ -144,24 +147,52 @@ def client(login):
         if var_2[0].get() < var_2[1].get():
             text += ["цена BETWEEN " + str(var_2[0].get()) + " and " + str(var_2[1].get())]
 
-        o = []
-        for i in var_3:
-            p = []
-            for j in i:
-                p += [f"'{j.get()}'"]
-            o += [p]
-        var_3 = o
+        def add(text):
+            tmp1 = []
+            for i in var_3:
+                tmp2 = []
+                for j in i:
+                    if j.get() != '':
+                        tmp2 += [f"'{j.get()}'"]
+                tmp1 += [tmp2]
+            for i in arr:
+                if i == arr[0] and tmp1[0] != []:
+                        text += ["категория IN(" +", ".join(tmp1[0]) +")"]
+                if i == arr[1] and tmp1[1] != []:
+                        text += ["id_производителя IN (SELECT id_производителя FROM производитель WHERE фирма IN(" +", ".join(tmp1[1]) +"))"]
+            return text
+        add(text)
 
-        for i in range(1):
-            l = ", ".join(var_3[i])
-            text += ["категория IN(" + l + ")"]
-
-        print(text)
         if len(text) == 0:
             return ''
         else:
-            print('WHERE ' + ' and '.join(text))
-            return ('WHERE ' + ' and '.join(text))
+            return (' WHERE ' + ' and '.join(text))
+
+    def order(var_4):
+        text = []
+        if var_4.get() == 'Сначала дорогие':
+            text += ["цена DESC"]
+        elif var_4.get() == 'Сначала дешевые':
+            text += ["цена ASC"]
+        if len(text) == 0:
+            return ''
+        else:
+            return (' ORDER BY '+' and '.join(text))
+
+    def group(var_4):
+        text = []
+        if var_4.get() == 'По id':
+            text += ["id_товара"]
+        elif var_4.get() == 'По производителю':
+            text += ["id_производителя"]
+        elif var_4.get() == 'По категории':
+            text += ["категория"]
+
+        if len(text) == 0:
+            return ''
+        else:
+            return (' GROUP BY ' + ' and '.join(text))
+
 
     destroy(window)
     window.title('Клиент ' + login)
@@ -170,11 +201,9 @@ def client(login):
     frame_search = LabelFrame(window, text='Поиск', font=(1, 15))
     frame_search.pack(side=TOP, anchor=W, padx=20, pady=15)
     Entry(frame_search).pack(side=LEFT)
+    column_delete = 'id_поставки'
     Button(frame_search, text='Поиск', font=(1, 11), command=lambda: draw_table(frame_table, 'товар',
-                                                                                "SELECT * FROM товар " + power(var,
-                                                                                                               var_2,
-                                                                                                               var_3,
-                                                                                                               l) + ";")).pack(
+                                                                                "SELECT * FROM товар " + where(var, var_2, var_3, arr) + group(var_4[1]) + order(var_4[0])+";", column_delete)).pack(
         padx=10, side=LEFT)
     Button(frame_search, text='Выйти', font=(1, 11), command=lambda: into()).pack()
 
@@ -215,14 +244,16 @@ def client(login):
     arr_4 = ['Сортировка', 'Группировка']
     arr_5 = [('Отсутсвует', 'Сначала дорогие', 'Сначала дешевые'),
              ('Отсутсвует', 'По id', 'По производителю', 'По категории')]
+    var_4 = []
     for i in arr_4:
         frame_2 = LabelFrame(frame_filter, text=i, font=(1, 13))
         frame_2.pack(anchor=W)
-        ttk.Combobox(frame_2, values=arr_5[arr_4.index(i)]).pack()
+        var_4 += [StringVar()]
+        ttk.Combobox(frame_2, textvariable=var_4[arr_4.index(i)], values=arr_5[arr_4.index(i)]).pack()
 
     frame_table = Frame(window)
     frame_table.pack(anchor=W)
-    draw_table(frame_table, 'товар', "SELECT * FROM " + 'товар' + ";")
+    draw_table(frame_table, 'товар', "SELECT * FROM " + 'товар' + ";", column_delete)
 
 
 client('')
