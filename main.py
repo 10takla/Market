@@ -19,9 +19,8 @@ def destroy(frame):
 
 
 def get_columns_name(table, column_delete=''):
-    print(column_delete)
-    if column_delete != None:
-        column_delete = " AND `COLUMN_NAME` != '" + column_delete + "'"
+    if column_delete != '':
+        column_delete = " AND `COLUMN_NAME` NOT IN(" + column_delete + ")"
     mycursor.execute(
         "SELECT `COLUMN_NAME` FROM `INFORMATION_SCHEMA`.`COLUMNS` WHERE `TABLE_SCHEMA`='магазин' AND `TABLE_NAME`='" + table + "'" + column_delete + ";")
     return [i for j in mycursor.fetchall() for i in j]
@@ -201,9 +200,12 @@ def client(login):
     frame_search = LabelFrame(window, text='Поиск', font=(1, 15))
     frame_search.pack(side=TOP, anchor=W, padx=20, pady=15)
     Entry(frame_search).pack(side=LEFT)
-    column_delete = 'id_поставки'
+    column_delete = "'id_поставки'"
+    t = get_columns_name('товар')
+    t.remove('id_поставки')
+    t = ", ".join(t)
     Button(frame_search, text='Поиск', font=(1, 11), command=lambda: draw_table(frame_table, 'товар',
-                                                                                "SELECT * FROM товар " + where(var, var_2, var_3, arr) + group(var_4[1]) + order(var_4[0])+";", column_delete)).pack(
+                                                                                "SELECT "+t+" FROM товар " + where(var, var_2, var_3, arr) + group(var_4[1]) + order(var_4[0])+";", column_delete)).pack(
         padx=10, side=LEFT)
     Button(frame_search, text='Выйти', font=(1, 11), command=lambda: into()).pack()
 
@@ -253,7 +255,7 @@ def client(login):
 
     frame_table = Frame(window)
     frame_table.pack(anchor=W)
-    draw_table(frame_table, 'товар', "SELECT * FROM " + 'товар' + ";", column_delete)
+    draw_table(frame_table, 'товар', "SELECT "+t+" FROM " + 'товар' + ";", column_delete)
 
 
 client('')
