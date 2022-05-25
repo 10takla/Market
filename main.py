@@ -136,8 +136,9 @@ def worker(login, right):
 
 
 def client(login):
-    def where(var_1, var_2, var_3, arr):
-        text = []
+    def where(search, var_1, var_2, var_3, arr):
+        text = ['назвакние_товара LIKE "_%'+search.get()+'_%"']
+
         if var_1[0].get() == 1 and var_1[1].get() == 0:
             text += ["в_наличии != '0'"]
         elif var_1[0].get() == 0 and var_1[1].get() == 1:
@@ -165,6 +166,7 @@ def client(login):
         if len(text) == 0:
             return ''
         else:
+            print(' WHERE ' + ' and '.join(text))
             return (' WHERE ' + ' and '.join(text))
 
     def order(var_4):
@@ -199,13 +201,16 @@ def client(login):
 
     frame_search = LabelFrame(window, text='Поиск', font=(1, 15))
     frame_search.pack(side=TOP, anchor=W, padx=20, pady=15)
-    Entry(frame_search).pack(side=LEFT)
+
+    search = StringVar()
+    Entry(frame_search, textvariable=search).pack(side=LEFT)
+
     column_delete = "'id_поставки'"
     t = get_columns_name('товар')
     t.remove('id_поставки')
     t = ", ".join(t)
     Button(frame_search, text='Поиск', font=(1, 11), command=lambda: draw_table(frame_table, 'товар',
-                                                                                "SELECT "+t+" FROM товар " + where(var, var_2, var_3, arr) + group(var_4[1]) + order(var_4[0])+";", column_delete)).pack(
+                                                                                "SELECT "+t+" FROM товар " + where(search, var, var_2, var_3, arr) + group(var_4[1]) + order(var_4[0])+";", column_delete)).pack(
         padx=10, side=LEFT)
     Button(frame_search, text='Выйти', font=(1, 11), command=lambda: into()).pack()
 
