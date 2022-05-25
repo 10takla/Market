@@ -48,15 +48,16 @@ def action(action, table, entries):
         for i in range(len(text_1)):
             text_3 += [text_1[i] + " = " + text_2[i]]
         text_3 = ", ".join(text_3)
-        mycursor.execute(
-            "UPDATE " + table + " SET " + text_3 + " WHERE (" + text[0] + " = '" + entries[0] + "');")
+
         if entries[0] == '':
             mb.showerror("Ошибка", "Введите id строки!")
+        else: mycursor.execute(
+            "UPDATE " + table + " SET " + text_3 + " WHERE (" + text[0] + " = '" + entries[0] + "');")
 
     elif action == "Удалить":
-        mycursor.execute("DELETE FROM " + table + " WHERE " + text[0] + " = " + entries[0] + ";")
         if entries[0] == '':
             mb.showerror("Ошибка", "Введите id строки!")
+        else: mycursor.execute("DELETE FROM " + table + " WHERE " + text[0] + " = " + entries[0] + ";")
 
 
 def draw_table(frame_table, table, text, column_delete=''):
@@ -68,7 +69,7 @@ def draw_table(frame_table, table, text, column_delete=''):
 
     for i in heads:
         table.heading(i, text=i.title().replace('_', ' '))
-        table.column(i, anchor=W,  width=150)
+        table.column(i, anchor=W, width=150)
     for i in lst:
         table.insert('', END, values=i)
 
@@ -80,6 +81,7 @@ def draw_table(frame_table, table, text, column_delete=''):
 
 
 window = Tk()
+color = ['#f75252', '#ffffff', '#adcfff']
 
 
 def worker(login, right):
@@ -93,10 +95,10 @@ def worker(login, right):
     frame_panel = LabelFrame(window, text='Выберите таблицу', font=30, labelanchor='n')
     frame_panel.pack(pady=5, fill='x')
     for i in db:
-        Button(frame_panel, text=i.title(), font=(1, 14),
+        Button(frame_panel, relief=GROOVE, text=i.title(), font=(1, 14),
                command=lambda i=i: (draw_table(frame_table, i, "SELECT * FROM " + i + ";"), draw_panel(i))).pack(
             side=LEFT, padx=15, pady=10)
-    Button(frame_panel, text="Выйти".title(), font=8, command=lambda: into()).pack(side=RIGHT, fill=Y)
+    Button(frame_panel, relief=RAISED, text="Выйти".title(), font=8, command=lambda: into()).pack(side=RIGHT, fill=Y)
 
     frame_table = Frame(window)
     frame_table.pack(anchor=W)
@@ -124,9 +126,9 @@ def worker(login, right):
             if right == 'Персонал' and table != 'продажа':
                 continue
             Button(frame_edit, text=i, font=(1, 12),
-                   command=lambda i=i: (action(i, table, [i.get() for i in var]), draw_table(table))).pack(
+                   command=lambda i=i: (action(i, table, [i.get() for i in var]), draw_table(frame_table, table, "SELECT * FROM " + table + ";"))).pack(
                 side=LEFT,
-                anchor=S, padx=20,
+                anchor=S, padx=10,
                 pady=10)
         frame_edit.pack(pady=5, fill='x')
 
@@ -197,6 +199,7 @@ def client(login):
     destroy(window)
     window.title('Клиент ' + login)
     window.minsize(200, 210)
+    padx, pady = 10, 6
 
     frame_search = LabelFrame(window, text='Поиск', font=(1, 15))
     frame_search.pack(side=TOP, anchor=W, padx=20, pady=15)
@@ -215,7 +218,7 @@ def client(login):
                                                                                     var_4[0]) + ";",
                                                                                 column_delete)).pack(
         padx=10, side=LEFT)
-    Button(frame_search, text='Выйти', font=(1, 11), command=lambda: into()).pack()
+    Button(frame_search, relief=RAISED, text='Выйти', font=(1, 11), command=lambda: into()).pack()
 
     frame_filter = LabelFrame(window, text='Фильтры', font=(1, 15), labelanchor=N)
     frame_filter.pack(anchor=W, padx=20, side=LEFT)
@@ -224,10 +227,10 @@ def client(login):
     var = []
     for i in arr:
         var += [IntVar()]
-        Checkbutton(frame_filter, text=i, variable=var[arr.index(i)]).pack(anchor=W)
+        Checkbutton(frame_filter, text=i, variable=var[arr.index(i)]).pack(anchor=W, padx=padx)
 
     frame_price = LabelFrame(frame_filter, text='Цена', font=(1, 13))
-    frame_price.pack()
+    frame_price.pack(padx=padx, pady=pady)
     array = ['От', 'До']
     var_2 = []
     for i in array:
@@ -242,7 +245,7 @@ def client(login):
     var_3 = []
     for i in arr:
         frame_1 = LabelFrame(frame_filter, text=i, font=(1, 13))
-        frame_1.pack(anchor=W)
+        frame_1.pack(anchor=W, padx=padx, pady=pady)
         mycursor.execute("SELECT " + arr_2[arr.index(i)] + " FROM " + arr_3[arr.index(i)] + ";")
         l = list(set(i for j in mycursor.fetchall() for i in j))
         tmp = []
@@ -257,7 +260,7 @@ def client(login):
     var_4 = []
     for i in arr_4:
         frame_2 = LabelFrame(frame_filter, text=i, font=(1, 13))
-        frame_2.pack(anchor=W)
+        frame_2.pack(anchor=W, padx=padx, pady=3)
         var_4 += [StringVar()]
         ttk.Combobox(frame_2, textvariable=var_4[arr_4.index(i)], values=arr_5[arr_4.index(i)]).pack()
 
@@ -265,15 +268,13 @@ def client(login):
     frame_table.pack(anchor=W)
     draw_table(frame_table, 'товар', "SELECT " + t + " FROM " + 'товар' + ";", column_delete)
 
-
-client('')
-
-
 def into():
     destroy(window)
 
     def vhod(var, var2):
-        if var[1].get() == '1' and var2 == 'Администратор':
+        if var[0].get() == '' and var[1].get() != '':
+            mb.showwarning("Ошибка", "Введите логин")
+        elif var[1].get() == '1' and var2 == 'Администратор':
             worker(var[0].get(), var2)
         elif var[1].get() == '2' and var2 == 'Персонал':
             worker(var[0].get(), var2)
@@ -282,10 +283,10 @@ def into():
         else:
             mb.showerror("Ошибка", "Неправильный логин или пароль!")
 
-    window.title('Авторизация')
+    window.title('Вход')
     window.minsize(600, 350)
 
-    frame = LabelFrame(window, text='Авторизация', font=30, labelanchor='n')
+    frame = LabelFrame(window, text='Авторизация', font=(1, 17), labelanchor='n')
     frame.pack(pady=55)
 
     frame_into = Frame(frame)
@@ -294,7 +295,7 @@ def into():
     arr = ['Логин', 'Пароль', 'Войти как']
     var = []
     for i in arr:
-        Label(frame_into, text=i, font=3, width=8, anchor='e').grid(column=0, row=arr.index(i))
+        Label(frame_into, text=i, font=(1, 12), width=8, anchor='e').grid(column=0, row=arr.index(i))
         if i != arr[-1]:
             var += [StringVar()]
             Entry(frame_into, textvariable=var[arr.index(i)]).grid(column=1, row=arr.index(i))
@@ -302,13 +303,13 @@ def into():
             arr_2 = ['Администратор', 'Персонал', 'Клиент']
             var2 = IntVar()
             for j in arr_2:
-                Radiobutton(frame_into, text=j, font=3, variable=var2, value=arr_2.index(j)).grid(
+                Radiobutton(frame_into, text=j, font=(1, 12), variable=var2, value=arr_2.index(j)).grid(
                     column=arr_2.index(j) + 1, row=2)
 
-    Button(frame, text='Войти', font=12, width=8, command=lambda: vhod(var, arr_2[var2.get()])).pack(side=BOTTOM,
+    Button(frame, relief=GROOVE, text='Войти', font=(1, 12), width=8, command=lambda: vhod(var, arr_2[var2.get()])).pack(side=BOTTOM,
                                                                                                      pady=15)
 
 
-# into()
+into()
 
 window.mainloop()
