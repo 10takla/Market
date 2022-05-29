@@ -4,11 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="52fc6b04-2fb7-4629-9da1-de2429dd0044" name="Default Changelist" comment="End">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Курсвоой проект по БД. Летифов А.docx" beforeDir="false" afterPath="$PROJECT_DIR$/Курсвоой проект по БД. Летифов А.docx" afterDir="false" />
-    </list>
+    <list default="true" id="52fc6b04-2fb7-4629-9da1-de2429dd0044" name="Default Changelist" comment="End" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -258,7 +254,28 @@
       <option name="project" value="LOCAL" />
       <updated>1653829823121</updated>
     </task>
-    <option name="localTasksCounter" value="23" />
+    <task id="LOCAL-00023" summary="End">
+      <created>1653833560859</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1653833560859</updated>
+    </task>
+    <task id="LOCAL-00024" summary="End">
+      <created>1653833575426</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1653833575426</updated>
+    </task>
+    <task id="LOCAL-00025" summary="End">
+      <created>1653833654113</created>
+      <option name="number" value="00025" />
+      <option name="presentableId" value="LOCAL-00025" />
+      <option name="project" value="LOCAL" />
+      <updated>1653833654113</updated>
+    </task>
+    <option name="localTasksCounter" value="26" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
