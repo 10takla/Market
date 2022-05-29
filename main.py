@@ -66,10 +66,10 @@ def action(action, table, entries):
 def draw_table(frame_table, table, text, column_delete=''):
     destroy(frame_table)
     heads = get_columns_name(table, column_delete)
+    print(text)
     mycursor.execute(text)
     lst = mycursor.fetchall()
     table = ttk.Treeview(frame_table, show='headings', columns=heads, height=20)
-    print(heads)
     for i in heads:
         table.heading(i, text=i.title().replace('_', ' '))
         table.column(i, anchor=W, width=150)
