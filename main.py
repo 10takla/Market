@@ -6,7 +6,7 @@ import tkinter.messagebox as mb
 mydb = mysql.connector.connect(
     host='localhost',
     user='root',
-    password='KKKasl',
+    password='AL38926516al',
     database='магазин'
 )
 mycursor = mydb.cursor()
@@ -20,10 +20,11 @@ def destroy(frame):
 
 def get_columns_name(table, column_delete=''):
     if column_delete != '':
-        column_delete = " AND `COLUMN_NAME` NOT IN(" + column_delete + ")"
-    mycursor.execute(
-        "SELECT `COLUMN_NAME` FROM `INFORMATION_SCHEMA`.`COLUMNS` WHERE `TABLE_SCHEMA`='магазин' AND `TABLE_NAME`='" + table + "'" + column_delete + ";")
-    return [i for j in mycursor.fetchall() for i in j]
+        column_delete = " AND COLUMN_NAME NOT IN(" + column_delete + ")"
+        mycursor.execute("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE `TABLE_SCHEMA`='магазин'  AND `TABLE_NAME`='" + table + "'" + column_delete + ";")
+    else:
+        mycursor.execute("SHOW COLUMNS FROM " + table + ";")
+    return [i for j in mycursor.fetchall() for i in j if j.index(i) == 0]
 
 
 def action(action, table, entries):
@@ -51,13 +52,15 @@ def action(action, table, entries):
 
         if entries[0] == '':
             mb.showerror("Ошибка", "Введите id строки!")
-        else: mycursor.execute(
-            "UPDATE " + table + " SET " + text_3 + " WHERE (" + text[0] + " = '" + entries[0] + "');")
+        else:
+            mycursor.execute(
+                "UPDATE " + table + " SET " + text_3 + " WHERE (" + text[0] + " = '" + entries[0] + "');")
 
     elif action == "Удалить":
         if entries[0] == '':
             mb.showerror("Ошибка", "Введите id строки!")
-        else: mycursor.execute("DELETE FROM " + table + " WHERE " + text[0] + " = " + entries[0] + ";")
+        else:
+            mycursor.execute("DELETE FROM " + table + " WHERE " + text[0] + " = " + entries[0] + ";")
 
 
 def draw_table(frame_table, table, text, column_delete=''):
@@ -66,7 +69,7 @@ def draw_table(frame_table, table, text, column_delete=''):
     mycursor.execute(text)
     lst = mycursor.fetchall()
     table = ttk.Treeview(frame_table, show='headings', columns=heads, height=20)
-
+    print(heads)
     for i in heads:
         table.heading(i, text=i.title().replace('_', ' '))
         table.column(i, anchor=W, width=150)
@@ -126,7 +129,8 @@ def worker(login, right):
             if right == 'Персонал' and table != 'продажа':
                 continue
             Button(frame_edit, text=i, font=(1, 12),
-                   command=lambda i=i: (action(i, table, [i.get() for i in var]), draw_table(frame_table, table, "SELECT * FROM " + table + ";"))).pack(
+                   command=lambda i=i: (action(i, table, [i.get() for i in var]),
+                                        draw_table(frame_table, table, "SELECT * FROM " + table + ";"))).pack(
                 side=LEFT,
                 anchor=S, padx=10,
                 pady=10)
@@ -268,6 +272,7 @@ def client(login):
     frame_table.pack(anchor=W)
     draw_table(frame_table, 'товар', "SELECT " + t + " FROM " + 'товар' + ";", column_delete)
 
+
 def into():
     destroy(window)
 
@@ -306,8 +311,9 @@ def into():
                 Radiobutton(frame_into, text=j, font=(1, 12), variable=var2, value=arr_2.index(j)).grid(
                     column=arr_2.index(j) + 1, row=2)
 
-    Button(frame, relief=GROOVE, text='Войти', font=(1, 12), width=8, command=lambda: vhod(var, arr_2[var2.get()])).pack(side=BOTTOM,
-                                                                                                     pady=15)
+    Button(frame, relief=GROOVE, text='Войти', font=(1, 12), width=8,
+           command=lambda: vhod(var, arr_2[var2.get()])).pack(side=BOTTOM,
+                                                              pady=15)
 
 
 into()
