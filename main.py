@@ -3,11 +3,14 @@ from tkinter import *
 from tkinter import ttk
 import tkinter.messagebox as mb
 
+
+connect_bd = [i.replace('\n', '') for i in open("host_connect.txt", encoding='utf-8')]
+
 mydb = mysql.connector.connect(
-    host='localhost',
-    user='root',
-    password='AL38926516al',
-    database='магазин'
+    host=connect_bd[0],
+    user=connect_bd[1],
+    password=connect_bd[2],
+    database=connect_bd[3]
 )
 mycursor = mydb.cursor()
 
@@ -21,7 +24,8 @@ def destroy(frame):
 def get_columns_name(table, column_delete=''):
     if column_delete != '':
         column_delete = " AND COLUMN_NAME NOT IN(" + column_delete + ")"
-        mycursor.execute("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE `TABLE_SCHEMA`='магазин'  AND `TABLE_NAME`='" + table + "'" + column_delete + ";")
+        mycursor.execute(
+            "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE `TABLE_SCHEMA`='магазин'  AND `TABLE_NAME`='" + table + "'" + column_delete + ";")
     else:
         mycursor.execute("SHOW COLUMNS FROM " + table + ";")
     return [i for j in mycursor.fetchall() for i in j if j.index(i) == 0]
@@ -66,7 +70,8 @@ def action(action, table, entries):
 def draw_table(frame_table, table, text, column_delete=''):
     destroy(frame_table)
     heads = get_columns_name(table, column_delete)
-    print(text)
+    if column_delete != '':
+        heads = [i.replace('id_производителя', 'производиетль') for i in heads]
     mycursor.execute(text)
     lst = mycursor.fetchall()
     table = ttk.Treeview(frame_table, show='headings', columns=heads, height=20)
@@ -85,7 +90,7 @@ def draw_table(frame_table, table, text, column_delete=''):
 
 window = Tk()
 color = ['#f75252', '#ffffff', '#adcfff']
-
+window.iconbitmap("market.ico")
 
 def worker(login, right):
     destroy(window)
@@ -196,7 +201,7 @@ def client(login):
             text += ["категория"]
 
         if len(text) == 0:
-            return ''
+            return ' GROUP BY id_товара'
         else:
             return (' GROUP BY ' + ' and '.join(text))
 
@@ -214,9 +219,10 @@ def client(login):
     column_delete = "'id_поставки'"
     t = get_columns_name('товар')
     t.remove('id_поставки')
+    t = [i.replace('id_производителя', 'фирма') for i in t]
     t = ", ".join(t)
     Button(frame_search, text='Поиск', font=(1, 11), command=lambda: draw_table(frame_table, 'товар',
-                                                                                "SELECT " + t + " FROM товар " + where(
+                                                                                "SELECT " + t + " FROM товар LEFT JOIN производитель using(id_производителя)" + where(
                                                                                     search, var, var_2, var_3,
                                                                                     arr) + group(var_4[1]) + order(
                                                                                     var_4[0]) + ";",
@@ -270,7 +276,9 @@ def client(login):
 
     frame_table = Frame(window)
     frame_table.pack(anchor=W)
-    draw_table(frame_table, 'товар', "SELECT " + t + " FROM " + 'товар' + ";", column_delete)
+    draw_table(frame_table, 'товар',
+               "SELECT " + t + " FROM " + 'товар' + " LEFT JOIN производитель using(id_производителя);",
+               column_delete)
 
 
 def into():
