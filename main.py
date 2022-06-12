@@ -25,8 +25,9 @@ def get_columns_name(table, column_delete=''):
     if column_delete != '':
         column_delete = " AND COLUMN_NAME NOT IN(" + column_delete + ")"
         mycursor.execute(
-            "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE `TABLE_SCHEMA`='магазин'  AND `TABLE_NAME`='" + table + "'" + column_delete + ";")
+            "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE `TABLE_SCHEMA`='"+connect_bd[3]+"'  AND `TABLE_NAME`='" + table + "'" + column_delete + ";")
     else:
+        print("SHOW COLUMNS FROM " + table + ";")
         mycursor.execute("SHOW COLUMNS FROM " + table + ";")
     return [i for j in mycursor.fetchall() for i in j if j.index(i) == 0]
 
@@ -97,7 +98,7 @@ def worker(login, right):
     window.title(right + ' ' + login)
     window.minsize(200, 210)
 
-    mycursor.execute("SHOW TABLES FROM магазин;")
+    mycursor.execute("SHOW TABLES FROM "+connect_bd[3]+";")
     db = [i for j in mycursor.fetchall() for i in j]
 
     frame_panel = LabelFrame(window, text='Выберите таблицу', font=30, labelanchor='n')
@@ -217,12 +218,13 @@ def client(login):
     Entry(frame_search, textvariable=search).pack(side=LEFT)
 
     column_delete = "'id_поставки'"
-    t = get_columns_name('товар')
+    table = 'city'
+    t = get_columns_name(table)
     t.remove('id_поставки')
     t = [i.replace('id_производителя', 'фирма') for i in t]
     t = ", ".join(t)
-    Button(frame_search, text='Поиск', font=(1, 11), command=lambda: draw_table(frame_table, 'товар',
-                                                                                "SELECT " + t + " FROM товар LEFT JOIN производитель using(id_производителя)" + where(
+    Button(frame_search, text='Поиск', font=(1, 11), command=lambda: draw_table(frame_table, table,
+                                                                                "SELECT " + table + " FROM "+table+" LEFT JOIN производитель using(id_производителя)" + where(
                                                                                     search, var, var_2, var_3,
                                                                                     arr) + group(var_4[1]) + order(
                                                                                     var_4[0]) + ";",
@@ -276,8 +278,8 @@ def client(login):
 
     frame_table = Frame(window)
     frame_table.pack(anchor=W)
-    draw_table(frame_table, 'товар',
-               "SELECT " + t + " FROM " + 'товар' + " LEFT JOIN производитель using(id_производителя);",
+    draw_table(frame_table, table,
+               "SELECT " + t + " FROM " + table + " LEFT JOIN производитель using(id_производителя);",
                column_delete)
 
 
