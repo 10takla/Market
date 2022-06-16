@@ -77,16 +77,10 @@ class Filters(LabelFrame):
             Checkbutton(self.frame_widgets, text=i, variable=var[l.index(i)], onvalue=i, offvalue='').pack(anchor=W)
         return var
 
-    def sort(self, arr_5):
+    def sort(self, arr):
         var = StringVar()
-        ttk.Combobox(self.frame_widgets, textvariable=var, values=arr_5).pack()
+        ttk.Combobox(self.frame_widgets, textvariable=var, values=arr).pack()
         return var
-
-    def grot(where, order, group):
-        where = [[j.get() for j in i] for i in where]
-        order = [i.get() for i in order]
-        group = [i.get() for i in group]
-        print(where, order, group)
 
 
 class SQL():
@@ -113,30 +107,23 @@ class SQL():
 
         return text
 
-    def order(self, var_4):
-        text = []
-        if var_4.get() == 'Сначала дорогие':
-            text += ["цена DESC"]
-        elif var_4.get() == 'Сначала дешевые':
-            text += ["цена ASC"]
-        if len(text) == 0:
-            return ''
-        else:
-            return (' ORDER BY ' + ' and '.join(text))
+    def order(self, order):
+        text = ''
+        for p in search_file('Сортировка'):
+            for i in p[1:]:
+                for j in i:
+                    if j == order.get():
+                        text += ' ORDER BY ' + p[0] + ' ' + i[1]
 
-    def group(self, var_4):
-        text = []
-        if var_4.get() == 'По id':
-            text += ["id_товара"]
-        elif var_4.get() == 'По производителю':
-            text += ["id_производителя"]
-        elif var_4.get() == 'По категории':
-            text += ["категория"]
+        return text
 
-        if len(text) == 0:
-            return ' GROUP BY id_товара'
-        else:
-            return (' GROUP BY ' + ' and '.join(text))
+    def group(self, group):
+        text = ''
+        for i in search_file('Группировка'):
+            for j in i:
+                if j == group.get():
+                    text += ' GROUP BY ' + i[1]
+        return text
 
 
 def destroy(frame):
@@ -157,7 +144,7 @@ def get_columns_name(table, column_delete=''):
 
 def draw_table(frame_table, columns, text):
     destroy(frame_table)
-    print(text)
+
     mycursor.execute(text)
     data = mycursor.fetchall()
 
@@ -252,7 +239,6 @@ def work(type, index_type, login, rights, rights_attributes):
     window.title(type[index_type] + ' ' + login)
     window.minsize(200, 210)
     if rights[index_type] in [1, 2]:
-
         mycursor.execute("SHOW TABLES FROM " + search_file('магазин') + ";")
         db = [i for j in mycursor.fetchall() for i in j]
         frame_panel = LabelFrame(window, text='Выберите таблицу', font=30, labelanchor='n')
@@ -337,10 +323,12 @@ def work(type, index_type, login, rights, rights_attributes):
         where = []
         for i in search_file('Таблицы для фильтров'):
             where += [Filters(frame_filter, i).selected(table, join_table)]
-        order = Filters(frame_filter, 'Соритровка').sort(search_file('Сортировка'))
-        group = Filters(frame_filter, 'Группировка').sort(search_file('Группировка'))
-        Button(frame_search, text='Поиск', font=(1, 11),
-               command=lambda: SQL().order(order)).pack(padx=10, side=LEFT)
+
+        order = Filters(frame_filter, 'Соритровка').sort(
+            [i[j] for p in search_file('Сортировка') for i in p[1:] for j in range(len(i)) if j == 0])
+
+        group = Filters(frame_filter, 'Группировка').sort(
+            [i[j] for i in search_file('Группировка') for j in range(len(i)) if j == 0])
 
         """Таблица"""
         frame_table = Frame(window)
@@ -371,7 +359,6 @@ for i in range(len(rights)):
 window = Tk()
 window.iconbitmap("market.ico")
 
-# authorization(type, passwords, rights, rights_attributes)
-work(['Администратор', 'Персонал', 'Клиент'], 2, 'asda', [1, 2, 3], ['', 'продажа', ['товар', 'id_поставки']])
+authorization(type, passwords, rights, rights_attributes)
 
 window.mainloop()
