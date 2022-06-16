@@ -5,13 +5,138 @@ import tkinter.messagebox as mb
 
 connect_bd = [i.replace('\n', '') for i in open("host_connect.txt", encoding='utf-8')]
 
+
+def search_file(word):
+    for i in connect_bd:
+        if word in i:
+            i = i.split(': ', 1)[1]
+            if '; ' in i:
+                i = i.split('; ')
+                for l in i:
+                    if ', ' in l:
+                        i[i.index(l)] = l.split(', ')
+                        for k in i:
+                            for j in k:
+                                if ' - ' in j:
+                                    i[i.index(k)][k.index(j)] = j.split(' - ')
+                    elif ' - ' in l:
+                        i[i.index(l)] = l.split(' - ')
+            if ', ' in i:
+                i = i.split(', ')
+                for j in i:
+                    if ' - ' in j:
+                        i[i.index(j)] = j.split(' - ')
+
+            if ' - ' in i:
+                i = i.split(' - ')
+            return i
+
+
 mydb = mysql.connector.connect(
-    host=connect_bd[0].split(': ')[1],
-    user=connect_bd[1].split(': ')[1],
-    password=connect_bd[2].split(': ')[1],
-    database=connect_bd[3].split(': ')[1]
+    host=search_file('host'),
+    user=search_file('user'),
+    password=search_file('password'),
+    database=search_file('database')
 )
 mycursor = mydb.cursor()
+
+
+class Filters(LabelFrame):
+    def __init__(self, frame_filter=None, text=''):
+        self.frame_filter = frame_filter
+        self.text = text
+        self.frame_widgets = LabelFrame(self.frame_filter, text=self.text.title(), font=(1, 13))
+        self.frame_widgets.pack(anchor=W, padx=10, pady=6)
+
+    def having(self, arr):
+        var = []
+        k = [i.replace('_', ' ') for i in [arr, "Не " + arr]]
+        for i in range(len(k)):
+            var += [IntVar()]
+            Checkbutton(self.frame_widgets, text=k[i].title(), variable=var[i], onvalue=1, offvalue=0).pack(
+                anchor=W)
+        return var
+
+    def diapazon(self, increment):
+        array = ['От', 'До']
+        var = []
+        for i in array:
+            Label(self.frame_widgets, text=i).pack(side=LEFT)
+            var += [IntVar()]
+            Spinbox(self.frame_widgets, from_=0, to=increment * 1000, increment=increment, width=7,
+                    textvariable=var[array.index(i)]).pack(
+                side=LEFT)
+        return var
+
+    def selected(self, table, join_table):
+        mycursor.execute("SELECT " + self.text + " FROM " + table + " " + join_table + ";")
+        l = list(set(i for j in mycursor.fetchall() for i in j))
+        var = []
+        for i in l:
+            var += [StringVar()]
+            Checkbutton(self.frame_widgets, text=i, variable=var[l.index(i)], onvalue=i, offvalue='').pack(anchor=W)
+        return var
+
+    def sort(self, arr_5):
+        var = StringVar()
+        ttk.Combobox(self.frame_widgets, textvariable=var, values=arr_5).pack()
+        return var
+
+    def grot(where, order, group):
+        where = [[j.get() for j in i] for i in where]
+        order = [i.get() for i in order]
+        group = [i.get() for i in group]
+        print(where, order, group)
+
+
+class SQL():
+    def where(self, search, having, between, where):
+        having = [i.get() for i in having]
+        between = [i.get() for i in between]
+        where = [[j.get() for j in i] for i in where]
+
+        text = 'WHERE ' + search_file('Поиск') + ' LIKE "_%' + search.get() + '_%"'
+
+        if having[0] == 1 and having[1] == 0:
+            text += " AND в_наличии != '0'"
+        elif having[0] == 0 and having[1] == 1:
+            text += " AND в_наличии = '0'"
+
+        if between[0] < between[1]:
+            text += " AND цена BETWEEN " + str(between[0]) + " and " + str(between[1])
+
+        for i in range(len(where)):
+            g = list(filter(None, where[i]))
+            g = [f'"{i}"' for i in g]
+            if len(g) != 0:
+                text += ' AND ' + search_file('Таблицы для фильтров')[i] + " IN ({})".format(', '.join(g))
+
+        return text
+
+    def order(self, var_4):
+        text = []
+        if var_4.get() == 'Сначала дорогие':
+            text += ["цена DESC"]
+        elif var_4.get() == 'Сначала дешевые':
+            text += ["цена ASC"]
+        if len(text) == 0:
+            return ''
+        else:
+            return (' ORDER BY ' + ' and '.join(text))
+
+    def group(self, var_4):
+        text = []
+        if var_4.get() == 'По id':
+            text += ["id_товара"]
+        elif var_4.get() == 'По производителю':
+            text += ["id_производителя"]
+        elif var_4.get() == 'По категории':
+            text += ["категория"]
+
+        if len(text) == 0:
+            return ' GROUP BY id_товара'
+        else:
+            return (' GROUP BY ' + ' and '.join(text))
 
 
 def destroy(frame):
@@ -32,7 +157,7 @@ def get_columns_name(table, column_delete=''):
 
 def draw_table(frame_table, columns, text):
     destroy(frame_table)
-
+    print(text)
     mycursor.execute(text)
     data = mycursor.fetchall()
 
@@ -116,9 +241,7 @@ def authorization(type, passwords, rights, rights_attributes):
     def vhod(log_pass, index_type):
         if log_pass[0] == '':
             mb.showwarning("Ошибка", "Введите логин")
-
-        elif (rights[index_type] == 1 or rights[index_type] == 2) and log_pass[1] != passwords[
-            index_type]:
+        elif (rights[index_type] == 1 or rights[index_type] == 2) and log_pass[1] != passwords[index_type]:
             mb.showerror("Ошибка", "Неправильный логин или пароль!")
         else:
             work(type, index_type, log_pass[0], rights, rights_attributes)
@@ -129,15 +252,15 @@ def work(type, index_type, login, rights, rights_attributes):
     window.title(type[index_type] + ' ' + login)
     window.minsize(200, 210)
     if rights[index_type] in [1, 2]:
-        mycursor.execute("SHOW TABLES FROM " + connect_bd[3].split(': ')[1] + ";")
-        db = [i for j in mycursor.fetchall() for i in j]
 
+        mycursor.execute("SHOW TABLES FROM " + search_file('магазин') + ";")
+        db = [i for j in mycursor.fetchall() for i in j]
         frame_panel = LabelFrame(window, text='Выберите таблицу', font=30, labelanchor='n')
         frame_panel.pack(pady=5, fill='x')
         for i in db:
             Button(frame_panel, relief=GROOVE, text=i.title(), font=(1, 14),
                    command=lambda i=i: (
-                   draw_table(frame_table, get_columns_name(i), "SELECT * FROM " + i + ";"), draw_panel(i))).pack(
+                       draw_table(frame_table, get_columns_name(i), "SELECT * FROM " + i + ";"), draw_panel(i))).pack(
                 side=LEFT, padx=15, pady=10)
 
         frame_table = Frame(window)
@@ -167,7 +290,8 @@ def work(type, index_type, login, rights, rights_attributes):
                     continue
                 Button(frame_edit, text=i, font=(1, 12),
                        command=lambda i=i: (action(i, table, [i.get() for i in var]),
-                                            draw_table(frame_table, get_columns_name(table), "SELECT * FROM " + table + ";"))).pack(
+                                            draw_table(frame_table, get_columns_name(table),
+                                                       "SELECT * FROM " + table + ";"))).pack(
                     side=LEFT,
                     anchor=S, padx=10,
                     pady=10)
@@ -177,133 +301,47 @@ def work(type, index_type, login, rights, rights_attributes):
 
         draw_panel(db[0])
     if rights[index_type] == 3:
-        def where(search, var_1, var_2, var_3, arr):
-            text = ['назвакние_товара LIKE "_%' + search.get() + '_%"']
-
-            if var_1[0].get() == 1 and var_1[1].get() == 0:
-                text += ["в_наличии != '0'"]
-            elif var_1[0].get() == 0 and var_1[1].get() == 1:
-                text += ["в_наличии = '0'"]
-
-            if var_2[0].get() < var_2[1].get():
-                text += ["цена BETWEEN " + str(var_2[0].get()) + " and " + str(var_2[1].get())]
-
-            def add(text):
-                tmp1 = []
-                for i in var_3:
-                    tmp2 = []
-                    for j in i:
-                        if j.get() != '':
-                            tmp2 += [f"'{j.get()}'"]
-                    tmp1 += [tmp2]
-                for i in arr:
-                    if i == arr[0] and tmp1[0] != []:
-                        text += ["категория IN(" + ", ".join(tmp1[0]) + ")"]
-                    if i == arr[1] and tmp1[1] != []:
-                        text += [
-                            "id_производителя IN (SELECT id_производителя FROM производитель WHERE фирма IN(" + ", ".join(
-                                tmp1[1]) + "))"]
-                return text
-
-            add(text)
-
-            if len(text) == 0:
-                return ''
-            else:
-                return (' WHERE ' + ' and '.join(text))
-
-        def order(var_4):
-            text = []
-            if var_4.get() == 'Сначала дорогие':
-                text += ["цена DESC"]
-            elif var_4.get() == 'Сначала дешевые':
-                text += ["цена ASC"]
-            if len(text) == 0:
-                return ''
-            else:
-                return (' ORDER BY ' + ' and '.join(text))
-
-        def group(var_4):
-            text = []
-            if var_4.get() == 'По id':
-                text += ["id_товара"]
-            elif var_4.get() == 'По производителю':
-                text += ["id_производителя"]
-            elif var_4.get() == 'По категории':
-                text += ["категория"]
-
-            if len(text) == 0:
-                return ' GROUP BY id_товара'
-            else:
-                return (' GROUP BY ' + ' and '.join(text))
         """Обявление переменных"""
-        padx, pady = 10, 6
         table = rights_attributes[index_type].pop(0)
         columns = list(set(get_columns_name(table)).difference(set(rights_attributes[index_type])))
-        renames = [i.split(' - ') for i in connect_bd[10].split(': ')[1].split(', ')]
+        renames = search_file('Замена колонок')
         for j in range(len(renames)):
             columns = [i.replace(renames[j][0], renames[j][1]) for i in columns]
         mycursor.execute(
             "SELECT CONSTRAINT_NAME, COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_NAME ='товар' AND CONSTRAINT_NAME <>'PRIMARY';")
-        text = ''
+        join_table = ''
         for i in mycursor.fetchall():
-            text += "LEFT JOIN " + i[0] + " using(" + i[1] + ") "
-        text = "SELECT " + ', '.join(columns) + " FROM " + table + " " + text + ";"
+            join_table += "LEFT JOIN " + i[0] + " using(" + i[1] + ") "
+        text = "SELECT " + ', '.join(columns) + " FROM " + table + " " + join_table + ";"
+
         """Окно поиска"""
         frame_search = LabelFrame(window, text='Поиск', font=(1, 15))
         frame_search.pack(side=TOP, anchor=W, padx=20, pady=15)
 
         search = StringVar()
         Entry(frame_search, textvariable=search).pack(side=LEFT)
-        Button(frame_search, text='Поиск', font=(1, 11), command=lambda: draw_table(frame_table, columns, text[:-1] + where(
-                                                                                        search, var, var_2, var_3,
-                                                                                        arr) + group(var_4[1]) + order(
-                                                                                        var_4[0]) + ";")).pack(
+        Button(frame_search, text='Поиск', font=(1, 11),
+               command=lambda: draw_table(frame_table, columns,
+                                          text[:-1] + SQL().where(search, having, between, where) + SQL().group(
+                                              group) + SQL().order(
+                                              order) + ";")).pack(
             padx=10, side=LEFT)
+
         """Окно фильтров"""
         frame_filter = LabelFrame(window, text='Фильтры', font=(1, 15), labelanchor=N)  # Окно фильтров
         frame_filter.pack(side=LEFT, anchor=N, padx=20)
 
-        arr = ["В наличии", "Отсутсвует в наличии"]
-        var = []
-        for i in arr:
-            var += [IntVar()]
-            Checkbutton(frame_filter, text=i, variable=var[arr.index(i)]).pack(anchor=W, padx=padx)
+        having = Filters(frame_filter).having(search_file('Having'))
+        t = search_file('BETWEEN')
+        between = Filters(frame_filter, t[0].title()).diapazon(int(t[1]))
+        where = []
+        for i in search_file('Таблицы для фильтров'):
+            where += [Filters(frame_filter, i).selected(table, join_table)]
+        order = Filters(frame_filter, 'Соритровка').sort(search_file('Сортировка'))
+        group = Filters(frame_filter, 'Группировка').sort(search_file('Группировка'))
+        Button(frame_search, text='Поиск', font=(1, 11),
+               command=lambda: SQL().order(order)).pack(padx=10, side=LEFT)
 
-        frame_price = LabelFrame(frame_filter, text='Цена', font=(1, 13))
-        frame_price.pack(padx=padx, pady=pady)
-        array = ['От', 'До']
-        var_2 = []
-        for i in array:
-            Label(frame_price, text=i).pack(side=LEFT)
-            var_2 += [IntVar()]
-            Spinbox(frame_price, from_=0, to=100000, increment=1000, width=7, textvariable=var_2[array.index(i)]).pack(
-                side=LEFT)
-
-        arr = ['Категория', 'Производитель']
-        arr_2 = ['категория', 'фирма']
-        arr_3 = ['товар', 'производитель']
-        var_3 = []
-        for i in arr:
-            frame_1 = LabelFrame(frame_filter, text=i, font=(1, 13))
-            frame_1.pack(anchor=W, padx=padx, pady=pady)
-            mycursor.execute("SELECT " + arr_2[arr.index(i)] + " FROM " + arr_3[arr.index(i)] + ";")
-            l = list(set(i for j in mycursor.fetchall() for i in j))
-            tmp = []
-            for i in l:
-                tmp += [StringVar()]
-                Checkbutton(frame_1, text=i, variable=tmp[l.index(i)], onvalue=i, offvalue='').pack(anchor=W)
-            var_3 += [tmp]
-
-        arr_4 = ['Сортировка', 'Группировка']
-        arr_5 = [('Отсутсвует', 'Сначала дорогие', 'Сначала дешевые'),
-                 ('Отсутсвует', 'По id', 'По производителю', 'По категории')]
-        var_4 = []
-        for i in arr_4:
-            frame_2 = LabelFrame(frame_filter, text=i, font=(1, 13))
-            frame_2.pack(anchor=W, padx=padx, pady=3)
-            var_4 += [StringVar()]
-            ttk.Combobox(frame_2, textvariable=var_4[arr_4.index(i)], values=arr_5[arr_4.index(i)]).pack()
         """Таблица"""
         frame_table = Frame(window)
         frame_table.pack(side=TOP, anchor=N)
@@ -315,28 +353,25 @@ def work(type, index_type, login, rights, rights_attributes):
         side=BOTTOM, anchor=E)
 
 
-type = connect_bd[5].split(': ')[1].split(', ')
-passwords = connect_bd[6].split(': ')[1].split(', ')
-rights = list(map(int, connect_bd[7].split(': ')[1].split(', ')))
+type = search_file('Типы пользователей')
+passwords = search_file('Пароли')
+rights = list(map(int, search_file('Права')))
 
 rights_attributes = [''] * len(rights)
-tables_2 = [i.split(', ') for i in connect_bd[8].split(': ')[1].split('; ')]  # атрибуты для прав 2: доступные таблицы
-tables_3 = [i.split(', ') for i in
-            connect_bd[9].split(': ')[1].split('; ')]  # атрибуты для прав 3: таблица вывода и колонки исключения
-
+tables_2 = search_file('Атрибуты права 2')  # атрибуты для прав 2: доступные таблицы
+tables_3 = search_file('Атрибуты права 3')  # атрибуты для прав 3: таблица вывода и колонки исключения
 k, l = 0, 0
 for i in range(len(rights)):
     if rights[i] == 2:
-        rights_attributes[i] = tables_2[k]
+        rights_attributes[i] = tables_2
         k += 1
     if rights[i] == 3:
-        rights_attributes[i] = tables_3[l]
+        rights_attributes[i] = tables_3
         l += 1
-
 window = Tk()
 window.iconbitmap("market.ico")
 
-authorization(type, passwords, rights, rights_attributes)
-#work(['Администратор', 'Персонал', 'Клиент'], 2, 'asda', [1, 2, 3], ['', ['продажа'], ['товар']])
+# authorization(type, passwords, rights, rights_attributes)
+work(['Администратор', 'Персонал', 'Клиент'], 2, 'asda', [1, 2, 3], ['', 'продажа', ['товар', 'id_поставки']])
 
 window.mainloop()
