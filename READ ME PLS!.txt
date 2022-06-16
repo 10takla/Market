@@ -1,4 +1,1 @@
-Пароль для Администратора: 1
-Пароль для Персонала: 2
-
-Подключение к БД MySQL в файле host_connect.txt
+Подключение к БД MySQL и натсройки приложения в файле host_connect.txt (/AppMarket/host_connect.txt)
