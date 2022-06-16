@@ -5,11 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="52fc6b04-2fb7-4629-9da1-de2429dd0044" name="Default Changelist" comment="End">
-      <change beforePath="$PROJECT_DIR$/AppMarket — ярлык.lnk" beforeDir="false" afterPath="$PROJECT_DIR$/AppMarket — ярлык.lnk" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/AppMarket/host_connect.txt" beforeDir="false" afterPath="$PROJECT_DIR$/AppMarket/host_connect.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/READ ME PLS!.txt" beforeDir="false" afterPath="$PROJECT_DIR$/READ ME PLS!.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/host_connect — ярлык.lnk" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/host_connect.txt" beforeDir="false" afterPath="$PROJECT_DIR$/host_connect.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -367,7 +364,21 @@
       <option name="project" value="LOCAL" />
       <updated>1655360544175</updated>
     </task>
-    <option name="localTasksCounter" value="35" />
+    <task id="LOCAL-00035" summary="End">
+      <created>1655361023516</created>
+      <option name="number" value="00035" />
+      <option name="presentableId" value="LOCAL-00035" />
+      <option name="project" value="LOCAL" />
+      <updated>1655361023516</updated>
+    </task>
+    <task id="LOCAL-00036" summary="End">
+      <created>1655361029891</created>
+      <option name="number" value="00036" />
+      <option name="presentableId" value="LOCAL-00036" />
+      <option name="project" value="LOCAL" />
+      <updated>1655361029891</updated>
+    </task>
+    <option name="localTasksCounter" value="37" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
